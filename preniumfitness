@@ -1,0 +1,690 @@
+import React, { useState, useEffect } from 'react';
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Dumbbell, Home, TrendingUp, Users, Apple, Camera, Plus, Clock, ChevronRight, Calendar, Trophy, Bell, Settings, Search, Filter, Heart, Share2, MessageCircle, Bookmark } from 'lucide-react';
+
+// Modèle de données
+const initialExercises = [
+  { id: 1, name: 'Développé Couché', category: 'Pectoraux', image: '🏋️', description: 'Exercice de base pour les pectoraux' },
+  { id: 2, name: 'Squat', category: 'Jambes', image: '🦵', description: 'Roi des exercices pour les jambes' },
+  { id: 3, name: 'Rowing Barre', category: 'Dos', image: '💪', description: 'Construction du dos' },
+  { id: 4, name: 'Développé Militaire', category: 'Épaules', image: '🏋️', description: 'Épaules puissantes' },
+  { id: 5, name: 'Curl Biceps', category: 'Bras', image: '💪', description: 'Isolation des biceps' },
+  { id: 6, name: 'Extension Triceps', category: 'Bras', image: '💪', description: 'Développement des triceps' },
+  { id: 7, name: 'Soulevé de Terre', category: 'Dos', image: '🏋️', description: 'Force totale du corps' },
+  { id: 8, name: 'Leg Press', category: 'Jambes', image: '🦵', description: 'Machine pour les cuisses' }
+];
+
+const App = () => {
+  const [currentPage, setCurrentPage] = useState('home');
+  const [sessions, setSessions] = useState([]);
+  const [nutrition, setNutrition] = useState([]);
+  const [photos, setPhotos] = useState([]);
+  const [communityWorkouts, setCommunityWorkouts] = useState([
+    { id: 1, author: 'Marie L.', title: 'Programme Full Body', likes: 124, comments: 18, exercises: 8, duration: '60 min' },
+    { id: 2, author: 'Thomas K.', title: 'Split Push/Pull', likes: 89, comments: 12, exercises: 10, duration: '75 min' },
+    { id: 3, author: 'Sophie M.', title: 'Upper Body Focus', likes: 156, comments: 24, exercises: 7, duration: '45 min' }
+  ]);
+  const [currentSession, setCurrentSession] = useState(null);
+  const [showCreateSession, setShowCreateSession] = useState(false);
+
+  // Données de progression simulées
+  const progressData = [
+    { date: '01/12', poids: 245, reps: 48 },
+    { date: '08/12', poids: 260, reps: 52 },
+    { date: '15/12', poids: 275, reps: 55 },
+    { date: '22/12', poids: 285, reps: 58 },
+    { date: '29/12', poids: 300, reps: 62 },
+    { date: '05/01', poids: 315, reps: 65 },
+  ];
+
+  const nutritionData = [
+    { jour: 'Lun', calories: 2200, proteines: 180 },
+    { jour: 'Mar', calories: 2400, proteines: 190 },
+    { jour: 'Mer', calories: 2100, proteines: 175 },
+    { jour: 'Jeu', calories: 2500, proteines: 200 },
+    { jour: 'Ven', calories: 2300, proteines: 185 },
+    { jour: 'Sam', calories: 2600, proteines: 210 },
+    { jour: 'Dim', calories: 2200, proteines: 180 },
+  ];
+
+  // Composant Header
+  const Header = ({ title }) => (
+    <div className="bg-gradient-to-r from-blue-900 to-blue-800 p-4 flex items-center justify-between">
+      <h1 className="text-2xl font-bold text-white">{title}</h1>
+      <div className="flex gap-3">
+        <Bell className="text-blue-200 cursor-pointer hover:text-white transition" size={24} />
+        <Settings className="text-blue-200 cursor-pointer hover:text-white transition" size={24} />
+      </div>
+    </div>
+  );
+
+  // Page d'accueil
+  const HomePage = () => (
+    <div className="flex-1 overflow-y-auto bg-slate-900 p-4">
+      <div className="mb-6 bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-6 text-white">
+        <h2 className="text-xl font-bold mb-2">Bienvenue, Athlète! 💪</h2>
+        <p className="text-blue-100 mb-4">Dernière séance: Il y a 2 jours</p>
+        <div className="flex gap-4">
+          <div className="bg-white/20 rounded-lg p-3 flex-1">
+            <div className="text-2xl font-bold">12</div>
+            <div className="text-sm text-blue-100">Séances ce mois</div>
+          </div>
+          <div className="bg-white/20 rounded-lg p-3 flex-1">
+            <div className="text-2xl font-bold">+5kg</div>
+            <div className="text-sm text-blue-100">Progression</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold text-white">Actions rapides</h3>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <button
+            onClick={() => setShowCreateSession(true)}
+            className="bg-blue-600 hover:bg-blue-700 rounded-xl p-4 text-white transition flex flex-col items-center gap-2"
+          >
+            <Plus size={32} />
+            <span className="font-semibold">Nouvelle séance</span>
+          </button>
+          <button
+            onClick={() => setCurrentPage('progress')}
+            className="bg-slate-800 hover:bg-slate-700 rounded-xl p-4 text-white transition flex flex-col items-center gap-2"
+          >
+            <TrendingUp size={32} />
+            <span className="font-semibold">Voir progression</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="mb-6">
+        <h3 className="text-xl font-bold text-white mb-4">Statistiques hebdomadaires</h3>
+        <div className="bg-slate-800 rounded-xl p-4">
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={progressData.slice(-7)}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+              <XAxis dataKey="date" stroke="#94a3b8" />
+              <YAxis stroke="#94a3b8" />
+              <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
+              <Bar dataKey="poids" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-xl font-bold text-white mb-4">Séances récentes</h3>
+        {sessions.length === 0 ? (
+          <div className="bg-slate-800 rounded-xl p-8 text-center text-slate-400">
+            <Dumbbell size={48} className="mx-auto mb-4 opacity-50" />
+            <p>Aucune séance enregistrée</p>
+            <p className="text-sm mt-2">Commencez votre première séance!</p>
+          </div>
+        ) : (
+          sessions.slice(0, 3).map((session, idx) => (
+            <div key={idx} className="bg-slate-800 rounded-xl p-4 mb-3 flex items-center justify-between">
+              <div>
+                <div className="text-white font-semibold">{session.name}</div>
+                <div className="text-slate-400 text-sm">{session.exercises?.length || 0} exercices • {session.duration || '45'} min</div>
+              </div>
+              <ChevronRight className="text-blue-500" />
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+
+  // Page de création de séance
+  const CreateSessionPage = () => {
+    const [sessionName, setSessionName] = useState('');
+    const [selectedExercises, setSelectedExercises] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const filteredExercises = initialExercises.filter(ex =>
+      ex.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ex.category.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const addExercise = (exercise) => {
+      if (!selectedExercises.find(e => e.id === exercise.id)) {
+        setSelectedExercises([...selectedExercises, { ...exercise, sets: 3, reps: 10, weight: 0, rest: 60 }]);
+      }
+    };
+
+    const saveSession = () => {
+      if (sessionName && selectedExercises.length > 0) {
+        setSessions([...sessions, {
+          name: sessionName,
+          exercises: selectedExercises,
+          date: new Date().toLocaleDateString(),
+          duration: selectedExercises.length * 5 + ' min'
+        }]);
+        setShowCreateSession(false);
+        setSessionName('');
+        setSelectedExercises([]);
+      }
+    };
+
+    return (
+      <div className="flex-1 overflow-y-auto bg-slate-900 p-4">
+        <button
+          onClick={() => setShowCreateSession(false)}
+          className="text-blue-400 mb-4 hover:text-blue-300"
+        >
+          ← Retour
+        </button>
+
+        <h2 className="text-2xl font-bold text-white mb-4">Créer une séance</h2>
+
+        <input
+          type="text"
+          placeholder="Nom de la séance (ex: Jour Push)"
+          value={sessionName}
+          onChange={(e) => setSessionName(e.target.value)}
+          className="w-full bg-slate-800 text-white rounded-xl p-4 mb-4 outline-none focus:ring-2 focus:ring-blue-500"
+        />
+
+        {selectedExercises.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-bold text-white mb-3">Exercices sélectionnés ({selectedExercises.length})</h3>
+            {selectedExercises.map((ex, idx) => (
+              <div key={idx} className="bg-slate-800 rounded-xl p-4 mb-3">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">{ex.image}</span>
+                    <div>
+                      <div className="text-white font-semibold">{ex.name}</div>
+                      <div className="text-slate-400 text-sm">{ex.category}</div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedExercises(selectedExercises.filter(e => e.id !== ex.id))}
+                    className="text-red-400 hover:text-red-300"
+                  >
+                    Retirer
+                  </button>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  <div>
+                    <label className="text-slate-400 text-xs">Séries</label>
+                    <input
+                      type="number"
+                      value={ex.sets}
+                      onChange={(e) => {
+                        const updated = [...selectedExercises];
+                        updated[idx].sets = parseInt(e.target.value) || 0;
+                        setSelectedExercises(updated);
+                      }}
+                      className="w-full bg-slate-700 text-white rounded p-2 mt-1"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-slate-400 text-xs">Reps</label>
+                    <input
+                      type="number"
+                      value={ex.reps}
+                      onChange={(e) => {
+                        const updated = [...selectedExercises];
+                        updated[idx].reps = parseInt(e.target.value) || 0;
+                        setSelectedExercises(updated);
+                      }}
+                      className="w-full bg-slate-700 text-white rounded p-2 mt-1"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-slate-400 text-xs">Poids (kg)</label>
+                    <input
+                      type="number"
+                      value={ex.weight}
+                      onChange={(e) => {
+                        const updated = [...selectedExercises];
+                        updated[idx].weight = parseInt(e.target.value) || 0;
+                        setSelectedExercises(updated);
+                      }}
+                      className="w-full bg-slate-700 text-white rounded p-2 mt-1"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-slate-400 text-xs">Repos (s)</label>
+                    <input
+                      type="number"
+                      value={ex.rest}
+                      onChange={(e) => {
+                        const updated = [...selectedExercises];
+                        updated[idx].rest = parseInt(e.target.value) || 0;
+                        setSelectedExercises(updated);
+                      }}
+                      className="w-full bg-slate-700 text-white rounded p-2 mt-1"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+            <button
+              onClick={saveSession}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition"
+            >
+              Enregistrer la séance
+            </button>
+          </div>
+        )}
+
+        <div className="mb-4">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
+            <input
+              type="text"
+              placeholder="Rechercher un exercice..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-slate-800 text-white rounded-xl p-4 pl-12 outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+
+        <h3 className="text-lg font-bold text-white mb-3">Base d'exercices</h3>
+        <div className="grid gap-3">
+          {filteredExercises.map(exercise => (
+            <div
+              key={exercise.id}
+              onClick={() => addExercise(exercise)}
+              className="bg-slate-800 hover:bg-slate-700 rounded-xl p-4 cursor-pointer transition flex items-center gap-4"
+            >
+              <span className="text-4xl">{exercise.image}</span>
+              <div className="flex-1">
+                <div className="text-white font-semibold">{exercise.name}</div>
+                <div className="text-slate-400 text-sm">{exercise.category}</div>
+                <div className="text-slate-500 text-xs mt-1">{exercise.description}</div>
+              </div>
+              <Plus className="text-blue-500" size={24} />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Page de progression
+  const ProgressPage = () => (
+    <div className="flex-1 overflow-y-auto bg-slate-900 p-4">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-white mb-4">Ma progression</h2>
+        
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-4 text-white">
+            <div className="text-sm opacity-90 mb-1">Volume total</div>
+            <div className="text-2xl font-bold">8.4t</div>
+            <div className="text-xs opacity-75 mt-1">+12% ce mois</div>
+          </div>
+          <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl p-4 text-white">
+            <div className="text-sm opacity-90 mb-1">Séances</div>
+            <div className="text-2xl font-bold">48</div>
+            <div className="text-xs opacity-75 mt-1">Cette année</div>
+          </div>
+          <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-xl p-4 text-white">
+            <div className="text-sm opacity-90 mb-1">Record PR</div>
+            <div className="text-2xl font-bold">120kg</div>
+            <div className="text-xs opacity-75 mt-1">Squat</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-6">
+        <h3 className="text-lg font-bold text-white mb-4">Évolution du poids total</h3>
+        <div className="bg-slate-800 rounded-xl p-4">
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={progressData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+              <XAxis dataKey="date" stroke="#94a3b8" />
+              <YAxis stroke="#94a3b8" />
+              <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
+              <Line type="monotone" dataKey="poids" stroke="#3b82f6" strokeWidth={3} dot={{ fill: '#3b82f6', r: 6 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="mb-6">
+        <h3 className="text-lg font-bold text-white mb-4">Répétitions totales</h3>
+        <div className="bg-slate-800 rounded-xl p-4">
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={progressData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+              <XAxis dataKey="date" stroke="#94a3b8" />
+              <YAxis stroke="#94a3b8" />
+              <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
+              <Line type="monotone" dataKey="reps" stroke="#8b5cf6" strokeWidth={3} dot={{ fill: '#8b5cf6', r: 6 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="bg-blue-600/20 border-2 border-blue-600 rounded-xl p-4">
+        <div className="flex items-center gap-3 mb-2">
+          <Trophy className="text-blue-400" size={32} />
+          <div>
+            <div className="text-white font-bold">Objectif atteint! 🎉</div>
+            <div className="text-blue-200 text-sm">+15kg sur le développé couché</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Page communauté
+  const CommunityPage = () => (
+    <div className="flex-1 overflow-y-auto bg-slate-900 p-4">
+      <div className="mb-4">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
+          <input
+            type="text"
+            placeholder="Rechercher des programmes..."
+            className="w-full bg-slate-800 text-white rounded-xl p-4 pl-12 outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </div>
+
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+        {['Tous', 'Full Body', 'Upper/Lower', 'Push/Pull', 'Débutant', 'Avancé'].map(tag => (
+          <button
+            key={tag}
+            className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-full whitespace-nowrap transition"
+          >
+            {tag}
+          </button>
+        ))}
+      </div>
+
+      <h2 className="text-2xl font-bold text-white mb-4">Programmes populaires</h2>
+      
+      {communityWorkouts.map(workout => (
+        <div key={workout.id} className="bg-slate-800 rounded-xl p-4 mb-4">
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <h3 className="text-white font-bold text-lg">{workout.title}</h3>
+              <p className="text-slate-400 text-sm">Par {workout.author}</p>
+            </div>
+            <button className="text-blue-400 hover:text-blue-300">
+              <Share2 size={20} />
+            </button>
+          </div>
+          
+          <div className="flex gap-4 text-sm text-slate-400 mb-4">
+            <span className="flex items-center gap-1">
+              <Dumbbell size={16} />
+              {workout.exercises} exercices
+            </span>
+            <span className="flex items-center gap-1">
+              <Clock size={16} />
+              {workout.duration}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between pt-3 border-t border-slate-700">
+            <div className="flex gap-4">
+              <button className="flex items-center gap-2 text-slate-400 hover:text-blue-400 transition">
+                <Heart size={20} />
+                <span>{workout.likes}</span>
+              </button>
+              <button className="flex items-center gap-2 text-slate-400 hover:text-blue-400 transition">
+                <MessageCircle size={20} />
+                <span>{workout.comments}</span>
+              </button>
+            </div>
+            <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+              <Bookmark size={16} />
+              Sauvegarder
+            </button>
+          </div>
+        </div>
+      ))}
+
+      <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition flex items-center justify-center gap-2">
+        <Plus size={24} />
+        Partager ma séance
+      </button>
+    </div>
+  );
+
+  // Page nutrition
+  const NutritionPage = () => (
+    <div className="flex-1 overflow-y-auto bg-slate-900 p-4">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-white mb-4">Nutrition</h2>
+        
+        <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-xl p-6 text-white mb-6">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <div className="text-sm opacity-90 mb-1">Aujourd'hui</div>
+              <div className="text-3xl font-bold">2,340 kcal</div>
+            </div>
+            <Calendar className="opacity-75" size={32} />
+          </div>
+          <div className="bg-white/20 rounded-lg p-3">
+            <div className="flex justify-between text-sm mb-2">
+              <span>Objectif: 2,500 kcal</span>
+              <span>94%</span>
+            </div>
+            <div className="w-full bg-white/30 rounded-full h-2">
+              <div className="bg-white rounded-full h-2" style={{ width: '94%' }}></div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="bg-slate-800 rounded-xl p-4">
+            <div className="text-blue-400 text-sm mb-1">Protéines</div>
+            <div className="text-white text-xl font-bold">185g</div>
+            <div className="text-slate-400 text-xs">/ 200g</div>
+          </div>
+          <div className="bg-slate-800 rounded-xl p-4">
+            <div className="text-yellow-400 text-sm mb-1">Glucides</div>
+            <div className="text-white text-xl font-bold">280g</div>
+            <div className="text-slate-400 text-xs">/ 300g</div>
+          </div>
+          <div className="bg-slate-800 rounded-xl p-4">
+            <div className="text-red-400 text-sm mb-1">Lipides</div>
+            <div className="text-white text-xl font-bold">65g</div>
+            <div className="text-slate-400 text-xs">/ 70g</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-6">
+        <h3 className="text-lg font-bold text-white mb-4">Suivi hebdomadaire</h3>
+        <div className="bg-slate-800 rounded-xl p-4">
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={nutritionData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+              <XAxis dataKey="jour" stroke="#94a3b8" />
+              <YAxis stroke="#94a3b8" />
+              <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
+              <Bar dataKey="calories" fill="#10b981" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="mb-6">
+        <h3 className="text-lg font-bold text-white mb-4">Repas du jour</h3>
+        <div className="space-y-3">
+          <div className="bg-slate-800 rounded-xl p-4 flex items-center justify-between">
+            <div>
+              <div className="text-white font-semibold">Petit-déjeuner</div>
+              <div className="text-slate-400 text-sm">Flocons d'avoine, banane, beurre de cacahuète</div>
+              <div className="text-blue-400 text-sm mt-1">580 kcal</div>
+            </div>
+            <ChevronRight className="text-slate-600" />
+          </div>
+          <div className="bg-slate-800 rounded-xl p-4 flex items-center justify-between">
+            <div>
+              <div className="text-white font-semibold">Déjeuner</div>
+              <div className="text-slate-400 text-sm">Poulet, riz, légumes</div>
+              <div className="text-blue-400 text-sm mt-1">820 kcal</div>
+            </div>
+            <ChevronRight className="text-slate-600" />
+          </div>
+        </div>
+      </div>
+
+      <button className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl transition flex items-center justify-center gap-2">
+        <Plus size={24} />
+        Ajouter un repas
+      </button>
+    </div>
+  );
+
+  // Page photos
+  const PhotosPage = () => (
+    <div className="flex-1 overflow-y-auto bg-slate-900 p-4">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-white mb-4">Progression physique</h2>
+        
+        <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl p-6 text-white mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <div className="text-sm opacity-90 mb-1">Transformation</div>
+              <div className="text-2xl font-bold">3 mois de progrès</div>
+            </div>
+            <Camera size={40} className="opacity-75" />
+          </div>
+          <div className="text-sm opacity-90">
+            12 photos • Dernière: Il y a 3 jours
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-bold text-white">Galerie privée</h3>
+          <button className="text-blue-400 text-sm hover:text-blue-300">
+            Comparaison
+          </button>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-3">
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <div key={i} className="relative aspect-[3/4] bg-slate-800 rounded-xl overflow-hidden group cursor-pointer">
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                <Camera className="text-slate-600" size={48} />
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 opacity-0 group-hover:opacity-100 transition">
+                <div className="text-white text-sm font-semibold">Semaine {i}</div>
+                <div className="text-slate-300 text-xs">{new Date(Date.now() - i * 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mb-6">
+        <h3 className="text-lg font-bold text-white mb-4">Statistiques de transformation</h3>
+        <div className="bg-slate-800 rounded-xl p-4 space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="text-slate-400">Poids</span>
+            <div className="text-right">
+              <div className="text-white font-bold">82kg</div>
+              <div className="text-green-400 text-xs">-3kg depuis le début</div>
+            </div>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-slate-400">Tour de taille</span>
+            <div className="text-right">
+              <div className="text-white font-bold">88cm</div>
+              <div className="text-green-400 text-xs">-5cm</div>
+            </div>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-slate-400">Tour de bras</span>
+            <div className="text-right">
+              <div className="text-white font-bold">38cm</div>
+              <div className="text-green-400 text-xs">+2cm</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-xl transition flex items-center justify-center gap-2">
+        <Camera size={24} />
+        Ajouter une photo
+      </button>
+    </div>
+  );
+
+  // Navigation en bas
+  const BottomNav = () => (
+    <div className="bg-slate-800 border-t border-slate-700 flex justify-around py-3">
+      <button
+        onClick={() => setCurrentPage('home')}
+        className={`flex flex-col items-center gap-1 ${currentPage === 'home' ? 'text-blue-500' : 'text-slate-400'}`}
+      >
+        <Home size={24} />
+        <span className="text-xs">Accueil</span>
+      </button>
+      <button
+        onClick={() => setCurrentPage('progress')}
+        className={`flex flex-col items-center gap-1 ${currentPage === 'progress' ? 'text-blue-500' : 'text-slate-400'}`}
+      >
+        <TrendingUp size={24} />
+        <span className="text-xs">Progrès</span>
+      </button>
+      <button
+        onClick={() => setCurrentPage('community')}
+        className={`flex flex-col items-center gap-1 ${currentPage === 'community' ? 'text-blue-500' : 'text-slate-400'}`}
+      >
+        <Users size={24} />
+        <span className="text-xs">Communauté</span>
+      </button>
+      <button
+        onClick={() => setCurrentPage('nutrition')}
+        className={`flex flex-col items-center gap-1 ${currentPage === 'nutrition' ? 'text-blue-500' : 'text-slate-400'}`}
+      >
+        <Apple size={24} />
+        <span className="text-xs">Nutrition</span>
+      </button>
+      <button
+        onClick={() => setCurrentPage('photos')}
+        className={`flex flex-col items-center gap-1 ${currentPage === 'photos' ? 'text-blue-500' : 'text-slate-400'}`}
+      >
+        <Camera size={24} />
+        <span className="text-xs">Photos</span>
+      </button>
+    </div>
+  );
+
+  const getPageTitle = () => {
+    const titles = {
+      home: 'GymTracker Pro',
+      progress: 'Progression',
+      community: 'Communauté',
+      nutrition: 'Nutrition',
+      photos: 'Galerie'
+    };
+    return titles[currentPage] || 'GymTracker Pro';
+  };
+
+  return (
+    <div className="h-screen flex flex-col bg-slate-900 max-w-md mx-auto">
+      {!showCreateSession && <Header title={getPageTitle()} />}
+      
+      {showCreateSession ? (
+        <CreateSessionPage />
+      ) : (
+        <>
+          {currentPage === 'home' && <HomePage />}
+          {currentPage === 'progress' && <ProgressPage />}
+          {currentPage === 'community' && <CommunityPage />}
+          {currentPage === 'nutrition' && <NutritionPage />}
+          {currentPage === 'photos' && <PhotosPage />}
+        </>
+      )}
+      
+      {!showCreateSession && <BottomNav />}
+    </div>
+  );
+};
+
+export default App;
